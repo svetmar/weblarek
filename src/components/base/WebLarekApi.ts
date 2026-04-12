@@ -6,10 +6,10 @@ export class WebLarekApi {
     }
 
     getProducts(): Promise<ProductsResponse> {
-        return this.api.get<ProductsResponse>('/product/')
+        return this.api.get<ProductsResponse>('/product/');
     }
 
     postOrder(data: CreateOrderRequest) {
-        this.api.post<OrderResponse>('/order/', data)
+        return this.api.post<OrderResponse>('/order/', data);
     }
 }

@@ -27,6 +27,5 @@ export class Header extends Component<unknown> {
 
   set counter(value: number) {
     this.basketCounterEl.textContent = String(value);
-    this.basketCounterEl.style.display = value > 0 ? "block" : "none";
   }
 }

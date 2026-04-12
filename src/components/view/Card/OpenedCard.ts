@@ -1,32 +1,28 @@
 import { Card } from "./Card.ts";
 import { ensureElement } from "../../../utils/utils.ts";
-import type { IEvents } from '../../base/Events.ts'
 import type { IOpenedCard } from "../../../types/index.ts";
 
+type IOpenedCardActions = {
+  onToggle?: () => void;
+};
+
 export class OpenedCard extends Card<IOpenedCard> {
-  private titleEl: HTMLElement;
   private imageEl: HTMLImageElement;
   private categoryEl: HTMLElement;
   private descriptionEl: HTMLElement;
-  private priceEl: HTMLElement;
   private buttonEl: HTMLButtonElement;
-  private _id!: string;
 
-  constructor(container: HTMLElement, private events: IEvents) {
+  constructor(container: HTMLElement, actions?: IOpenedCardActions) {
     super(container);
 
-    this.titleEl = ensureElement<HTMLElement>('.card__title', this.container);
     this.imageEl = ensureElement<HTMLImageElement>('.card__image', this.container);
     this.categoryEl = ensureElement<HTMLElement>('.card__category', this.container);
-    this.priceEl = ensureElement<HTMLElement>('.card__price', this.container);
     this.descriptionEl = ensureElement<HTMLElement>('.card__text', this.container);
     this.buttonEl = ensureElement<HTMLButtonElement>('.card__button', this.container);
 
-    this.buttonEl.addEventListener('click', () => this.events.emit('product:toggle', {id: this._id}))
-  }
-
-  set title(value: string) {
-    this.titleEl.textContent = value;
+    if (actions?.onToggle) {
+      this.buttonEl.addEventListener('click', actions.onToggle);
+    }
   }
 
   set image(value: string) {
@@ -54,7 +50,4 @@ export class OpenedCard extends Card<IOpenedCard> {
     this.buttonEl.disabled = !value;
   }
 
-  set id(value: string) {
-    this._id = value
-  }
 }
