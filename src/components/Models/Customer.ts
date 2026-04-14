@@ -1,10 +1,14 @@
-import type { IBuyer, TPayment } from "../../types/index.ts";
+import type { IBuyer } from "../../types/index.ts";
+import type { IEvents } from "../base/Events.ts";
 
 export class Customer {
   private data: Partial<IBuyer> = {};
 
+  constructor(private events: IEvents) {}
+
   update(data: Partial<IBuyer>): void {
     this.data = { ...this.data, ...data };
+    this.events.emit("customer:changed");
   }
 
   getData(): Partial<IBuyer> {

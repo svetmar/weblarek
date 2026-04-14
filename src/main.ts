@@ -20,11 +20,11 @@ import { FormOrderStep2 } from "./components/view/Form/FormOrderStep2";
 import { Success } from "./components/view/Success";
 import type { IBuyer } from "./types/index";
 
-const customer = new Customer();
 const api = new Api(API_URL);
 const webLarekApi = new WebLarekApi(api);
 const events = new EventEmitter();
 const catalog = new ProductCatalog(events);
+const customer = new Customer(events);
 const modal = new Modal(
   document.querySelector("#modal-container") as HTMLElement,
 );
@@ -77,9 +77,16 @@ try {
 //открытие карточки с выбранным продуктом
 events.on<{ id: string }>("product:select", ({ id }) => {
   const selectedProduct = catalog.getProductById(id);
-  if (selectedProduct) {
-    catalog.setSelectedProduct(selectedProduct);
-  } else {
+  if (!selectedProduct) {
+    return;
+  }
+  catalog.setSelectedProduct(selectedProduct);
+});
+
+//обновление выбранного продукта
+events.on("catalog:selectedChanged", () => {
+  const selectedProduct = catalog.getSelectedProduct();
+  if (!selectedProduct) {
     return;
   }
 
@@ -94,8 +101,11 @@ events.on<{ id: string }>("product:select", ({ id }) => {
   previewCard.category = selectedProduct.category;
   previewCard.price = selectedProduct.price;
 
-  previewCard.buttonText = cart.hasItem(id) ? "Удалить из корзины" : "Купить";
+  previewCard.buttonText = cart.hasItem(selectedProduct.id)
+    ? "Удалить из корзины"
+    : "Купить";
   previewCard.buttonEnabled = selectedProduct.price !== null;
+
   modal.open(previewCard.render());
 });
 
@@ -152,20 +162,49 @@ events.on("basket:checkout", () => {
   modal.open(formStep1.render());
 });
 
+//измениения в форме
+events.on<{ field: keyof IBuyer; value: string }>(
+  "form:change",
+  ({ field, value }) => {
+    customer.update({ [field]: value });
+  },
+);
+
+events.on("customer:changed", () => {
+  const { isValid, errors } = customer.validate();
+  const data = customer.getData();
+
+  if (data.address !== undefined) {
+    formStep1.address = data.address;
+  };
+  if (data.payment !== undefined) {
+    formStep1.payment = data.payment;
+  };
+  formStep1.errors = errors;
+  formStep1.isValid = !!data.payment && !!data.address;
+
+  if (data.email !== undefined) {
+    formStep2.email = data.email;
+  };
+  if (data.phone !== undefined) {
+    formStep2.phone = data.phone;
+  };
+  formStep2.errors = errors;
+  formStep2.isValid = !!data.email && !!data.phone;
+});
+
 //далее в первой форме
 events.on("order:submit", () => {
-  if (!formStep1.validate()) {
-    return;
-  }
-  customer.update(formStep1.values);
+  const data = customer.getData();
+  if (!data.payment || !data.address) return;
+  
   modal.open(formStep2.render());
 });
 
 events.on("contacts:submit", async () => {
-  if (!formStep2.validate()) {
-    return;
-  }
-  customer.update(formStep2.values);
+  const { isValid } = customer.validate();
+  if (!isValid) return;
+  
   try {
     const response = await webLarekApi.postOrder({
       ...(customer.getData() as IBuyer),

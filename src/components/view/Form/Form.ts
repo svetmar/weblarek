@@ -1,5 +1,6 @@
 import { Component } from "../../base/Component";
 import { ensureElement } from "../../../utils/utils";
+import type { IBuyer } from "../../../types/index";
 
 export abstract class Form<T> extends Component<T> {
   protected formEl: HTMLFormElement;
@@ -32,6 +33,7 @@ export abstract class Form<T> extends Component<T> {
     this.confirmButton.disabled = !value;
   }
 
-  abstract validate(): boolean;
-  abstract checkValidity(): boolean;
+  set errors(errors: Partial<Record<keyof IBuyer, string>>) {
+    this.errorMessageEl.textContent = Object.values(errors).join(" ");
+  }
 }

@@ -1,7 +1,7 @@
 import { Card } from "./Card.ts";
 import { ensureElement } from "../../../utils/utils.ts";
 import type { ICatalogCard } from "../../../types/index.ts";
-import { categoryMap } from '../../../utils/constants.ts'
+import { categoryMap } from '../../../utils/constants.ts';
 
 type ICardActions = {
   onClick?: () => void;

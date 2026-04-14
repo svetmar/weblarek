@@ -1,5 +1,6 @@
 import { Card } from "./Card.ts";
 import { ensureElement } from "../../../utils/utils.ts";
+import { categoryMap } from '../../../utils/constants.ts';
 import type { IOpenedCard } from "../../../types/index.ts";
 
 type IOpenedCardActions = {
@@ -31,6 +32,10 @@ export class OpenedCard extends Card<IOpenedCard> {
 
   set category(value: string) {
     this.categoryEl.textContent = value;
+    this.categoryEl.classList.remove('card__category_other');
+    if (value in categoryMap) {
+    this.categoryEl.classList.add(categoryMap[value as keyof typeof categoryMap]);
+    };
   }
 
   set price(value: number | null) {

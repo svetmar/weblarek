@@ -1,10 +1,10 @@
-import type { IPaymentDelivery, TPayment } from "../../../types/index";
+import type { IPaymentDelivery, TPayment, IBuyer } from "../../../types/index";
 import type { IEvents } from "../../base/Events";
 import { ensureElement, ensureAllElements } from "../../../utils/utils";
 import { Form } from "./Form";
 
 export class FormOrderStep1 extends Form<IPaymentDelivery> {
-  private payment: TPayment | undefined;
+  private _payment?: TPayment;
   private paymentButtons: HTMLButtonElement[];
   private addressInput: HTMLInputElement;
 
@@ -25,56 +25,38 @@ export class FormOrderStep1 extends Form<IPaymentDelivery> {
 
     this.paymentButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        this.payment = button.name as TPayment;
-        this.updatePaymentUI();
-        this.isValid = this.checkValidity();
+        this.events.emit("form:change", {
+        field: "payment",
+        value: button.name,
+      })
       });
     });
 
-    this.addressInput.addEventListener(
-      "input",
-      () => (this.isValid = this.checkValidity()),
-    );
+    this.addressInput.addEventListener("input", () => {
+      this.events.emit("form:change", {
+        field: "address",
+        value: this.addressInput.value,
+      });
+    });
 
     this.formEl.addEventListener("submit", (e) => {
       e.preventDefault();
-      this.events.emit("order:submit", this.values);
+      this.events.emit("order:submit");
     });
   }
 
-  set values(data: IPaymentDelivery) {
-    this.payment = data.payment;
-    this.addressInput.value = data.address;
+  set address(value: string) {
+    this.addressInput.value = value;
+  };
 
+  set payment(value: TPayment) {
+    this._payment = value;
     this.updatePaymentUI();
-    this.isValid = this.checkValidity();
-  }
+  };
 
-  get values(): IPaymentDelivery {
-    return {
-      payment: this.payment!,
-      address: this.addressInput.value,
-    };
-  }
-
-  validate(): boolean {
-    this.errorMessageEl.textContent = "";
-    let isValid = true;
-    if (!this.payment) {
-      this.errorMessageEl.textContent += "Выберите метод оплаты. ";
-      isValid = false;
-    }
-    if (!this.addressInput.value.trim()) {
-      this.errorMessageEl.textContent += "Введите адрес. ";
-      isValid = false;
-    }
-    return isValid;
-  }
-
-  checkValidity(): boolean {
-    //промежуточная проверка формы для управления доступностью кнопки "далее"
-    return !!this.payment && !!this.addressInput.value.trim();
-  }
+  set errors(errors: Partial<Record<keyof IBuyer, string>>) {
+    this.errorMessageEl.textContent = Object.values(errors).join(" ");
+  };
 
   private updatePaymentUI() {
     //активация выбранной кнопки в UI

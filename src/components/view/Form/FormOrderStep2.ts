@@ -23,45 +23,30 @@ export class FormOrderStep2 extends Form<IPhoneEmail> {
     );
 
     this.emailInput.addEventListener("input", () => {
-      this.isValid = this.checkValidity();
+      this.events.emit("form:change", {
+        field: "email",
+        value: this.emailInput.value,
+      });
     });
+
     this.phoneInput.addEventListener("input", () => {
-      this.isValid = this.checkValidity();
+      this.events.emit("form:change", {
+        field: "phone",
+        value: this.phoneInput.value,
+      });
     });
+
     this.formEl.addEventListener("submit", (e) => {
       e.preventDefault();
-      this.events.emit("contacts:submit", this.values);
+      this.events.emit("contacts:submit");
     });
   }
 
-  set values(data: IPhoneEmail) {
-    this.emailInput.value = data.email;
-    this.phoneInput.value = data.phone;
-    this.isValid = this.checkValidity();
+  set email(value: string) {
+    this.emailInput.value = value;
   }
 
-  get values(): IPhoneEmail {
-    return {
-      email: this.emailInput.value,
-      phone: this.phoneInput.value,
-    };
-  }
-
-  validate(): boolean {
-    let isValid = true;
-    this.errorMessageEl.textContent = "";
-    if (!this.emailInput.value.trim()) {
-      isValid = false;
-      this.errorMessageEl.textContent += "Введите электронный адрес. ";
-    }
-    if (!this.phoneInput.value.trim()) {
-      isValid = false;
-      this.errorMessageEl.textContent += "Введите номер телефона. ";
-    }
-    return isValid;
-  }
-
-  checkValidity(): boolean {
-    return !!this.emailInput.value.trim() && !!this.phoneInput.value.trim();
+  set phone(value: string) {
+    this.phoneInput.value = value;
   }
 }
